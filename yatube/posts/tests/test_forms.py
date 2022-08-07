@@ -77,8 +77,9 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        self.assertRedirects(response, reverse(
-           'posts:profile', args=(self.user_author.username,)))
+        self.assertRedirects(response,
+                             reverse('posts:profile',
+                                     args=(self.user_author.username,)))
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         first_object = Post.objects.first()

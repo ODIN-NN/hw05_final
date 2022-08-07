@@ -8,6 +8,7 @@ from django.views.decorators.cache import cache_page
 
 numb_of_obj = 10
 
+
 @cache_page(60)
 def index(request):
     post_list = Post.objects.all()
@@ -168,5 +169,3 @@ def profile_unfollow(request, username):
         )
         following.delete()
     return redirect('posts:profile', username=request.user.username)
-
-
