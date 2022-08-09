@@ -1,15 +1,16 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.cache import cache_page
+
 from .forms import PostForm, CommentForm
 from .models import Group, Post, User, Follow
-from django.views.decorators.cache import cache_page
 
 
 numb_of_obj = 10
 
 
-@cache_page(60)
+@cache_page(20)
 def index(request):
     post_list = Post.objects.all()
     paginator = Paginator(post_list, numb_of_obj)
@@ -47,13 +48,8 @@ def profile(request, username):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     title = f'Профайл пользователя {author}'
-#    Follow.refresh_from_db()
-    query_set = Follow.objects.filter(author_id=author.id,
-                                      user_id=request.user.id)
-    if len(query_set) != 0:
-        following = True
-    else:
-        following = False
+    following = Follow.objects.filter(author_id=author.id,
+                                      user_id=request.user.id).exists()
     context = {
         'author': author,
         'posts': author_posts,
@@ -153,7 +149,7 @@ def profile_follow(request, username):
     if Follow.objects.filter(user=request.user, author=author).exists():
         return redirect('posts:profile', username=request.user.username)
     else:
-        if author.username != request.user.username:
+        if author != request.user:
             following = Follow.objects.create(
                 user=request.user,
                 author=author,
@@ -165,7 +161,7 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    if author.username != request.user.username:
+    if author != request.user:
         following = Follow.objects.get(
             user=request.user,
             author=author,

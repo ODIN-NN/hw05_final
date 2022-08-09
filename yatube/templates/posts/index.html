@@ -4,7 +4,7 @@
     <h1>Последние обновления на сайте</h1>
     {% include 'posts/includes/switcher.html' %}
     {% for post in page_obj %}
-    {% include 'includes/post_card.html' %}
+    {% include 'posts/includes/post_card.html' %}
     {% if not forloop.last %}<hr>{% endif %}
     {% endfor %}
   </div>
