@@ -6,7 +6,6 @@ from django.views.decorators.cache import cache_page
 from .forms import PostForm, CommentForm
 from .models import Group, Post, User, Follow
 
-
 numb_of_obj = 10
 
 

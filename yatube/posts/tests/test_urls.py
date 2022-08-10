@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
-from ..models import Group, Post
 from django.core.cache import cache
+from django.test import TestCase, Client
 
+from ..models import Group, Post
 
 User = get_user_model()
 
@@ -124,12 +124,12 @@ class PostsURLTests(TestCase):
             f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
             f'/posts/{self.post.id}/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html',
+            '/about/author/': 'about/author.html',
+            '/about/tech/': 'about/tech.html',
+            '/ghost_page/': 'core/404.html',
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):
                 response = self.authorized_client_author.get(address)
                 self.assertTemplateUsed(response, template)
-
-    def test_404_custom_page(self):
-        response = self.authorized_client.get('/ghost_page/')
-        self.assertTemplateUsed(response, 'core/404.html')

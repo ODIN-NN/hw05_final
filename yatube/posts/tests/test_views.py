@@ -1,11 +1,13 @@
+from http import HTTPStatus
+from time import sleep
+
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
-from ..forms import PostForm
-from ..models import Group, Post, Follow
-from time import sleep
-from django.core.cache import cache
 
+from ..forms import CommentForm, PostForm
+from ..models import Group, Post, Follow, Comment
 
 User = get_user_model()
 
@@ -38,6 +40,12 @@ class GroupPagesTests(TestCase):
                 author=cls.user_author,
                 group=cls.group,
             )
+
+        cls.comment = Comment.objects.create(
+            text='setUpClass comment',
+            author=cls.user_author,
+            post=cls.post,
+        )
 
     def setUp(self):
         # Создаем неавторизованный клиент
@@ -75,6 +83,9 @@ class GroupPagesTests(TestCase):
             reverse('posts:post_create'): 'posts/create_post.html',
             reverse('posts:post_edit', kwargs={'post_id': self.post.id}):
                 'posts/create_post.html',
+            reverse('posts:follow_index'): 'posts/follow.html',
+            reverse('about:author'): 'about/author.html',
+            reverse('about:tech'): 'about/tech.html',
         }
         for reverse_name, template in templates_pages_names.items():
             with self.subTest(template=template):
@@ -95,9 +106,18 @@ class GroupPagesTests(TestCase):
         self.control_context(response)
 
     def test_pages_accept_correct_context_post_detail(self):
-        response = self.authorized_client.get(
+        response_auth_client = self.authorized_client.get(
             reverse('posts:post_detail', args=(self.post.id,)))
-        self.assertEqual(response.context.get('post'), self.post)
+        self.assertEqual(response_auth_client.context.get('post'), self.post)
+        self.assertEqual(response_auth_client.context.get('comments')[0],
+                         self.comment)
+        comment_form = response_auth_client.context.get('form')
+        self.assertIsInstance(comment_form, CommentForm)
+        response_guest_client = self.guest_client.get(
+            reverse('posts:post_detail', args=(self.post.id,)))
+        content_guest = response_guest_client.content
+        content_auth_client = response_auth_client.content
+        self.assertNotEqual(content_guest, content_auth_client)
 
     def test_pages_accept_correct_context_group_post(self):
         """Проверка правильности передаваемого
@@ -166,16 +186,20 @@ class GroupPagesTests(TestCase):
 
     def test_cache(self):
         test_post = Post.objects.create(author=self.user_author)
-        response_1 = self.authorized_client.get(reverse('posts:index'))
-        content_1 = response_1.content
+        response_before_post_delete = \
+            self.authorized_client.get(reverse('posts:index'))
+        content_before_post_delete = response_before_post_delete.content
         test_post.delete()
-        response_2 = self.authorized_client.get(reverse('posts:index'))
-        content_2 = response_2.content
-        self.assertEqual(content_1, content_2)
+        response_after_post_delete = \
+            self.authorized_client.get(reverse('posts:index'))
+        content_after_post_delete = response_after_post_delete.content
+        self.assertEqual(content_before_post_delete, content_after_post_delete)
         cache.clear()
-        response_3 = self.authorized_client.get(reverse('posts:index'))
-        content_3 = response_3.content
-        self.assertNotEqual(content_1, content_3)
+        response_after_cache_remove = \
+            self.authorized_client.get(reverse('posts:index'))
+        content_after_cache_remove = response_after_cache_remove.content
+        self.assertNotEqual(content_before_post_delete,
+                            content_after_cache_remove)
 
     def test_posts_feed(self):
         """Новая запись пользователя появляется в ленте тех,
@@ -206,3 +230,28 @@ class GroupPagesTests(TestCase):
             reverse('posts:profile_follow', args=(
                 self.user_author.username,)))
         self.assertEqual(Follow.objects.count(), 1)
+        self.authorized_client.get(
+            reverse('posts:profile_follow', args=(
+                self.user_author.username,)))
+        self.assertEqual(Follow.objects.count(), 1)
+        self.client.get(reverse('posts:profile_follow',
+                                args=(self.user_author.username,)))
+        self.assertEqual(Follow.objects.count(), 1)
+        self.client.get(reverse('posts:profile_unfollow',
+                                args=(self.user_author.username,)))
+        self.assertEqual(Follow.objects.count(), 1)
+
+    def test_comment_only_for_authorized_client(self):
+        comments_count = Comment.objects.count()
+        form_data = {
+            'text': 'Комментарий гостя.',
+        }
+        response = self.guest_client.post(
+            reverse('posts:add_comment', args=(self.post.id,)),
+            data=form_data,
+            follow=True
+        )
+        response = self.authorized_client.get(
+            reverse('posts:add_comment', args=(self.post.id,)))
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertEqual(Comment.objects.count(), comments_count)

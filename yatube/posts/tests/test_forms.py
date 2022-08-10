@@ -1,14 +1,14 @@
 import shutil
 import tempfile
-
-from django.test import Client, TestCase, override_settings
-from django.conf import settings
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.contrib.auth import get_user_model
-from django.urls import reverse
 from http import HTTPStatus
-from ..models import Group, Post, Comment
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase, override_settings
+from django.urls import reverse
+
+from ..models import Group, Post, Comment
 
 User = get_user_model()
 
@@ -113,8 +113,6 @@ class PostCreateFormTests(TestCase):
         comments_count = Comment.objects.count()
         form_data = {
             'text': 'Тестовый комментарий.',
-            'author': self.user_author,
-            'post': self.post,
         }
         response = self.authorized_client_author.post(
             reverse('posts:add_comment', args=(self.post.id,)),
@@ -124,19 +122,4 @@ class PostCreateFormTests(TestCase):
         test_comment = Comment.objects.first()
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(Comment.objects.count(), comments_count + 1)
-        self.assertEqual(test_comment.text, 'Тестовый комментарий.')
-
-    def test_comment_only_for_autthorized_client(self):
-        comments_count = Comment.objects.count()
-        form_data = {
-            'text': 'Комментарий гостя.',
-        }
-        response = self.client.post(
-            reverse('posts:add_comment', args=(self.post.id,)),
-            data=form_data,
-            follow=True
-        )
-        response = self.client.get(
-            reverse('posts:add_comment', args=(self.post.id,)))
-        self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertEqual(Comment.objects.count(), comments_count)
+        self.assertEqual(test_comment.text, form_data['text'])
