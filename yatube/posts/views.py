@@ -66,21 +66,13 @@ def post_detail(request, post_id):
     title = post.text[:30]
     form = CommentForm()
     comments = post.comments.all()
-    if request.user.is_authenticated:
-        context = {
-            'post': post,
-            'posts_count': posts_count,
-            'title': title,
-            'form': form,
-            'comments': comments,
-        }
-    else:
-        context = {
-            'post': post,
-            'posts_count': posts_count,
-            'title': title,
-            'comments': comments,
-        }
+    context = {
+        'post': post,
+        'posts_count': posts_count,
+        'title': title,
+        'form': form,
+        'comments': comments,
+    }
     return render(request, 'posts/post_detail.html', context)
 
 

@@ -113,17 +113,6 @@ class GroupPagesTests(TestCase):
                          self.comment)
         comment_form = response_auth_client.context.get('form')
         self.assertIsInstance(comment_form, CommentForm)
-#       Следующая ниже проверка не проходит тесты на сайте Практикума,
-#       поэтому я её закоментил, а так она работает.
-#       Тесты выдают следующую ошибку:
-#       AssertionError: Проверьте, что передали форму комментария в
-#       контекст страницы `/posts/<post_id>/` типа `CommentForm`
-#       Кроме того оставил
-#       проверку, которая была до предыдущего ревью.
-#       response_guest_client = self.guest_client.get(
-#           reverse('posts:post_detail', args=(self.post.id,)))
-#       guest_comment_form = response_guest_client.context.get('form')
-#       self.assertEqual(guest_comment_form, None)
         response_guest_client = self.guest_client.get(
             reverse('posts:post_detail', args=(self.post.id,)))
         content_guest = response_guest_client.content
