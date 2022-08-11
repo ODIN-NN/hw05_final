@@ -179,8 +179,8 @@ class GroupPagesTests(TestCase):
         response_group_2 = (self.
                             authorized_client_author.
                             get(reverse('posts:group_list',
-                                        kwargs={'slug': f'{self.group_2.slug}'})
-                                ))
+                                        kwargs={'slug': f'{self.group_2.slug}'}
+                                        )))
         self.assertEqual(object_post_group_list, self.post)
         self.assertNotIn(object_post_group_list,
                          response_group_2.context['page_obj'])
@@ -240,12 +240,12 @@ class GroupPagesTests(TestCase):
                                                user=self.user).count(), 1)
         self.client.get(reverse('posts:profile_follow',
                                 args=(self.user_author.username,)))
-        self.assertEqual(Follow.objects.filter(author=self.user_author).count(),
-                         1)
+        self.assertEqual(Follow.objects.filter(author=self.user_author).
+                         count(), 1)
         self.client.get(reverse('posts:profile_unfollow',
                                 args=(self.user_author.username,)))
-        self.assertEqual(Follow.objects.filter(author=self.user_author).count(),
-                         1)
+        self.assertEqual(Follow.objects.filter(author=self.user_author).
+                         count(), 1)
 
     def test_comment_only_for_authorized_client(self):
         comments_count = Comment.objects.count()
