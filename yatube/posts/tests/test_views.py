@@ -115,9 +115,8 @@ class GroupPagesTests(TestCase):
         self.assertIsInstance(comment_form, CommentForm)
         response_guest_client = self.guest_client.get(
             reverse('posts:post_detail', args=(self.post.id,)))
-        content_guest = response_guest_client.content
-        content_auth_client = response_auth_client.content
-        self.assertNotEqual(content_guest, content_auth_client)
+        guest_comment_form = response_guest_client.context.get('form')
+        self.assertEqual(guest_comment_form, None)
 
     def test_pages_accept_correct_context_group_post(self):
         """Проверка правильности передаваемого
@@ -173,30 +172,32 @@ class GroupPagesTests(TestCase):
                     self.COUNT_POST_FOR_TEST - 10))
 
     def test_create_new_post(self):
-        response_group = self.authorized_client_author.\
-            get(reverse('posts:group_list',
-                        kwargs={'slug': f'{self.group.slug}'}))
+        response_group = (self.authorized_client_author.
+                          get(reverse('posts:group_list',
+                                      kwargs={'slug': f'{self.group.slug}'})))
         object_post_group_list = response_group.context['page_obj'][0]
-        response_group_2 = self.authorized_client_author.\
-            get(reverse('posts:group_list',
-                        kwargs={'slug': f'{self.group_2.slug}'}))
+        response_group_2 = (self.
+                            authorized_client_author.
+                            get(reverse('posts:group_list',
+                                        kwargs={'slug': f'{self.group_2.slug}'})
+                                ))
         self.assertEqual(object_post_group_list, self.post)
         self.assertNotIn(object_post_group_list,
                          response_group_2.context['page_obj'])
 
     def test_cache(self):
         test_post = Post.objects.create(author=self.user_author)
-        response_before_post_delete = \
-            self.authorized_client.get(reverse('posts:index'))
+        response_before_post_delete = (self.authorized_client.
+                                       get(reverse('posts:index')))
         content_before_post_delete = response_before_post_delete.content
         test_post.delete()
-        response_after_post_delete = \
-            self.authorized_client.get(reverse('posts:index'))
+        response_after_post_delete = (self.authorized_client.
+                                      get(reverse('posts:index')))
         content_after_post_delete = response_after_post_delete.content
         self.assertEqual(content_before_post_delete, content_after_post_delete)
         cache.clear()
-        response_after_cache_remove = \
-            self.authorized_client.get(reverse('posts:index'))
+        response_after_cache_remove = (self.authorized_client.
+                                       get(reverse('posts:index')))
         content_after_cache_remove = response_after_cache_remove.content
         self.assertNotEqual(content_before_post_delete,
                             content_after_cache_remove)
@@ -225,21 +226,26 @@ class GroupPagesTests(TestCase):
         self.authorized_client.get(
             reverse('posts:profile_unfollow', args=(
                 self.user_author.username,)))
-        self.assertEqual(Follow.objects.count(), 0)
+        self.assertFalse(Follow.objects.filter(author=self.user_author,
+                                               user=self.user).exists())
         self.authorized_client.get(
             reverse('posts:profile_follow', args=(
                 self.user_author.username,)))
-        self.assertEqual(Follow.objects.count(), 1)
+        self.assertTrue(Follow.objects.filter(author=self.user_author,
+                                              user=self.user).exists())
         self.authorized_client.get(
             reverse('posts:profile_follow', args=(
                 self.user_author.username,)))
-        self.assertEqual(Follow.objects.count(), 1)
+        self.assertEqual(Follow.objects.filter(author=self.user_author,
+                                               user=self.user).count(), 1)
         self.client.get(reverse('posts:profile_follow',
                                 args=(self.user_author.username,)))
-        self.assertEqual(Follow.objects.count(), 1)
+        self.assertEqual(Follow.objects.filter(author=self.user_author).count(),
+                         1)
         self.client.get(reverse('posts:profile_unfollow',
                                 args=(self.user_author.username,)))
-        self.assertEqual(Follow.objects.count(), 1)
+        self.assertEqual(Follow.objects.filter(author=self.user_author).count(),
+                         1)
 
     def test_comment_only_for_authorized_client(self):
         comments_count = Comment.objects.count()
