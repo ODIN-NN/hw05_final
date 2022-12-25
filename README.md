@@ -1,3 +1,65 @@
-# hw05_final
+# Проект YaTube
 
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
+### Описание
+Проект YaTube представляет собой социальную сеть по интересам.
+Функционал проекта позволяет пользователю создавать посты (фотография + текст) относящиеся к одной из групп, подписываться на авторов, оставлять комментарии под постами. Кроме того пользователю доступна лента для просмотра последних добавленных постов, а также лента с последними добавленными постами только тех авторов на которых он подписан.
+Создавать группы может только администратор.
+Добавлять посты, комментарии и подписываться на авторов могут только аутентифицированные пользователи.
+
+### Технологии
+- Python 3.7
+- Django 2.2.16
+- SQLite
+- Unittest
+- Docker
+- WSGI-сервер(Gunicorn) (в реализованной версии на сервере)
+- веб-сервер(Nginx) (в реализованной версии на сервере)
+- PostgreSQL (в реализованной версии на сервере)
+
+### Как запустить проект локально:
+Клонировать репозиторий:
+
+```https://github.com/ODIN-NN/hw05_final.git```
+
+Cоздать виртуальное окружение:
+
+```python3 -m venv env```
+
+или
+
+```python -m venv env```
+
+Активировать виртуальное окружение:
+
+```. venv/bin/activate```
+
+или
+
+```source venv/Scripts/activate```
+
+Установить и обновить pip:
+
+```python3 -m pip install --upgrade pip```
+
+Установить зависимости из файла requirements.txt:
+
+```pip install -r requirements.txt```
+
+Выполнить миграции:
+
+```python3 manage.py migrate```
+
+или
+
+```python manage.py migrate```
+
+Запустить проект:
+
+```python3 manage.py runserver```
+
+или
+
+```python manage.py runserver```
+
+### Автор
+- [Александр Одинцов](https://github.com/ODIN-NN "Github page")
